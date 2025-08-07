@@ -1,6 +1,9 @@
 #pragma once
 #include "rack.hpp"
 
+extern float PI;
+extern float _2PI;
+
 struct BaseButtons {
 
 
@@ -14,8 +17,7 @@ struct BaseButtons {
 
 struct BaseFunctions {
 
-    static float PI;
-    static float _2pi;
+
 
     float incrementToward(float here, float there, float factor);
 
