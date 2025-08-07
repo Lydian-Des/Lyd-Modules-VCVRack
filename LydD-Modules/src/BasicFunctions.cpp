@@ -1,6 +1,9 @@
 #include "BasicFunctions.h"
-#include "rack.hpp"
 
+
+
+float PI = 3.1415926535897932;
+float _2PI = 2.0 * 3.1415926535897932;
 
     void BaseButtons::incrementButton(float press, bool* set, int limit, int* value) {
         int val = *value;
@@ -40,9 +43,6 @@
     }
 
 
-    float BaseFunctions::PI = 3.14159265358979323846;
-    float BaseFunctions::_2pi = 2.0 * 3.14159265358979323846;
-
     float BaseFunctions::incrementToward(float here, float there, float factor) {
         return (there - here) / factor;
     }
@@ -81,22 +81,22 @@
     }
 
     float BaseFunctions::incrementSize(float pitch, float sampleRate) {
-        return _2pi * pitch / sampleRate;
+        return _2PI * pitch / sampleRate;
 
     }
 
     void BaseFunctions::incrementPhase(float pitch, float sampleRate, float* phase) {
-        float incremPhase = _2pi * pitch / sampleRate;
+        float incremPhase = _2PI * pitch / sampleRate;
         *phase += incremPhase;
-        if (*phase >= 2.f * _2pi) {
-            *phase -= 2.f * _2pi;
+        if (*phase >= 2.f * _2PI) {
+            *phase -= 2.f * _2PI;
         }
     }
     void BaseFunctions::incrementPhase(rack::simd::float_4 pitch, float sampleRate, rack::simd::float_4* phase, float limit) {
         rack::simd::float_4 incremPhase;
         rack::simd::float_4 circle(limit);
 
-        incremPhase = _2pi * pitch / sampleRate;
+        incremPhase = _2PI * pitch / sampleRate;
         rack::simd::float_4 compMask = *phase <= circle;
         *phase += rack::simd::ifelse((compMask), incremPhase, -(circle));
     }
@@ -205,6 +205,8 @@
             ZrotateXW,
             WrotateXW };
     }
+
+
 
 
 
