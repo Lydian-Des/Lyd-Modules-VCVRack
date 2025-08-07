@@ -2,12 +2,8 @@
 #include <vector>
 
 
-
- 
-// VCV has a limit of 16 channels in a polyphonic cable.
 static const int maxPolyphony = 1;
-static const float PI = 3.14159265358979323846;
-static const float _2PI = 2.f * PI;
+
 static rack::simd::float_4 Zero{ 0.f };
 static rack::simd::float_4 One{ 1.f };
 
@@ -294,31 +290,31 @@ struct TorusModule : Module
     }
 
     void generateOutput(const ProcessArgs& args) {
-        float inFM = (((inputs[FM_INPUT].isConnected()) ? inputs[FM_INPUT].getVoltage(0) * params[FM_PARAM].value : params[FM_PARAM].value));
+        //float inFM = (((inputs[FM_INPUT].isConnected()) ? inputs[FM_INPUT].getVoltage(0) * params[FM_PARAM].value : params[FM_PARAM].value));
         float inPM = (((inputs[FM_INPUT].isConnected()) ? inputs[FM_INPUT].getVoltage(0) * params[FM_PARAM].value : params[FM_PARAM].value));
         rack::simd::float_4 tFM = tPitches;// *(inFM + 1.f);
         rack::simd::float_4 nFM = nPitches;// *(inFM + 1.f);
         rack::simd::float_4 tPM = tPitches * inPM * args.sampleTime;
         rack::simd::float_4 nPM = nPitches * inPM * args.sampleTime;
-
+        float eqrange = 1;
 
         switch (equation) {
         case 0: {
-
+            eqrange = 3.4;
             Coord = Paths.Electron(R, r, tWindsL, tPhases, nWindsL, nPhases);
             CoordZero = Paths.Electron(R, r, tWindsL, rack::simd::float_4{ 0.f }, nWindsL, rack::simd::float_4{ 0.f });
 
             break;
         }
         case 1: {
-
+            eqrange = 1.5;
             Coord = Paths.Folding(R, r, tWindsL, tPhases, nWindsL, nPhases);
             CoordZero = Paths.Folding(R, r, tWindsL, rack::simd::float_4{ 0.f }, nWindsL, rack::simd::float_4{ 0.f });
 
             break;
         }
         case 2: {
-
+            eqrange = 3.1;
             Coord = Paths.Torus(R, r, tWindsL, tPhases, nWindsL, nPhases);
             CoordZero = Paths.Torus(R, r, tWindsL, rack::simd::float_4{ 0.f }, nWindsL, rack::simd::float_4{ 0.f });
 
@@ -342,9 +338,9 @@ struct TorusModule : Module
         rack::simd::float_4 path{ Xout, Yout, Zout, 0.f };
         pathToDraw = std::vector<rack::simd::float_4>{ Coord, Zero, Zero, Zero };
 
-        float xLerp = Functions.lerp(-5, 5, -(3 ), 3 , Xout);
-        float yLerp = Functions.lerp(-5, 5, -(3 ), 3 , Yout);
-        float zLerp = Functions.lerp(-5, 5, -(3 ), 3 , Zout);
+        float xLerp = Functions.lerp(-5, 5, -(eqrange ), eqrange , Xout);
+        float yLerp = Functions.lerp(-5, 5, -(eqrange), eqrange, Yout);
+        float zLerp = Functions.lerp(-5, 5, -(eqrange), eqrange, Zout);
 
         if (step % 800 == 0 ) {
             dirty = true;
