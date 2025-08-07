@@ -48,35 +48,6 @@ struct Brots {
 
     std::function<std::complex<float>(float, std::complex<float>, std::complex<float>)> brotype;
 
-    /*void setBrot(int type) {
-        switch (type) {
-        case 0: {
-            brotype = mandelbrot;
-            break;
-        }
-        case 1: {
-            brotype = burningShip;
-            break;
-        }
-        case 2: {
-            brotype = beetle;
-            break;
-        }
-        case 3: {
-            brotype = bird;
-            break;
-        }
-        case 4: {
-            brotype = daisy;
-            break;
-        }
-        case 5: {
-            brotype = unicorn;
-            break;
-        }
-        }
-    }*/
-
 };
 
 
@@ -281,31 +252,22 @@ struct PoppyModule : Module
     float zoomSpread = 1.f;
     float cvValX = 0.f;
     float cvValY = 0.f;   
-    float tableK = 0.f;
-
     float nowX = 0;
     float nowY = 0;
-    float holdX = 0;
-    float holdY = 0;
-    float speedY = 1;
-    float speedX = 1;
+    float dtX = 0;
+    float dtY = 0;
+    float speedX = 0;
+    float speedY = 0;
 
-    float dtX = 1;
-    float timeXBy4 = 0;
-    int timeX4Count = 0;
-    float dtY = 1;
-    float timeYBy4 = 0;
-    int timeY4Count = 0;
 
-    
-  
-    rack::dsp::Timer TimerY;
-    rack::dsp::Timer TimerX;
+    rack::dsp::Timer timerX;
+    rack::dsp::Timer timerY;
     rack::dsp::SchmittTrigger TriggerX;
     rack::dsp::SchmittTrigger TriggerY;
     rack::dsp::SchmittTrigger EOC;
     rack::dsp::SlewLimiter _slewlimitY{};
     rack::dsp::SlewLimiter _slewlimitX{};
+    rack::dsp::TRCFilter<float> deClick;
 
     float loosesqrt(float x) {
         float g = x / 2.f;
@@ -361,7 +323,7 @@ struct PoppyModule : Module
             break;
         }
         case 1: {
-            paramQuantities[QUALITY_BUTTON_PARAM]->name = "Theatre";
+            paramQuantities[QUALITY_BUTTON_PARAM]->name = "Flower";
             break;
         }
         case 2: {
@@ -405,20 +367,22 @@ struct PoppyModule : Module
             break;
         }
         }
-        
+        deClick.setCutoffFreq(2000.f / args.sampleRate);
     }
+
+
     void createSequence(const ProcessArgs& args) {
 
         
 
         seqsize = params[ITERS_PARAM].value;
         if (inSizeconnect) {
-            seqsize = (int)Funct.lerp(1, 127, 0, 5, inputs[SEQ_LENGTH_INPUT].getVoltage(0));
+            seqsize = (int)Funct.lerp(1, 127, 0, 5, rack::math::clamp(inputs[SEQ_LENGTH_INPUT].getVoltage(0), 0.f, 5.f));
             seqsize = seqsize > 1 ? seqsize : 1;
         }
         seqstart = params[SEQ_START_PARAM].value;
         if (inStartconnect) {
-            seqstart = (int)Funct.lerp(0, 127, 0, 5, inputs[SEQ_START_INPUT].getVoltage(0));
+            seqstart = (int)Funct.lerp(0, 127, 0, 5, rack::math::clamp(inputs[SEQ_START_INPUT].getVoltage(0), 0.f, 5.f));
             seqstart = seqstart > 0 ? seqstart : 0;
         }
         if ((inResetconnect && inputs[RESET_INPUT].getVoltage(0) > 1.0f) | reset) {
@@ -585,13 +549,13 @@ struct PoppyModule : Module
 
         float smoothnessX = -(params[SLEW_X_PARAM].value) + 1;
         if (inslewX) {
-            float smooXput = Funct.lerp(0, 1, 0, 5, inputs[SLEW_X_INPUT].getVoltage(0));
+            float smooXput = Funct.lerp(0, 1, 0, 5, rack::math::clamp(inputs[SLEW_X_INPUT].getVoltage(0), 0.f, 5.f));
             smoothnessX = ((smooXput > 0) ? smooXput : 0);
         }
         _slewlimitX.setRiseFall(Funct.lerp(speedX, 20000, 0, 1, pow(smoothnessX, 4)), Funct.lerp(speedX, 20000, 0, 1, pow(smoothnessX, 4)));
         float smoothnessY = -(params[SLEW_Y_PARAM].value) + 1;
         if (inslewY) {
-            float smooYput = Funct.lerp(0, 1, 0, 5, inputs[SLEW_Y_INPUT].getVoltage(0));
+            float smooYput = Funct.lerp(0, 1, 0, 5, rack::math::clamp(inputs[SLEW_Y_INPUT].getVoltage(0), 0.f, 5.f));
             smoothnessY = ((smooYput > 0) ? smooYput : 0);
         }
         _slewlimitY.setRiseFall(Funct.lerp(speedY, 20000, 0, 1, pow(smoothnessY, 4)), Funct.lerp(speedY, 20000, 0, 1, pow(smoothnessY, 4)));
@@ -600,15 +564,9 @@ struct PoppyModule : Module
 
 
     void generateOutput(const ProcessArgs& args) {
-        
-        
-            
-
+     
         Ystep = (Yseqstep + seqstart) % iters;
         Xstep = (Xseqstep + seqstart) % iters;
-
-        float outputXprev = nowX;
-        float outputYprev = nowY;
 
         cvValX = Funct.lerp(_range, range, -2.f, 2.f, xCoord[Xstep]);
         cvValY = Funct.lerp(_rangeY, rangeY, -2.f, 2.f, yCoord[Ystep]);
@@ -622,17 +580,15 @@ struct PoppyModule : Module
         }
         cvValX *= Funct.lerp(1, 2, 1, 50, zoomSpread);
         cvValY *= Funct.lerp(1, 2, 1, 50, zoomSpread);
-            
-            
 
         bool BOC = Xstep == seqstart;
-        bool BOCtrig = EOC.process(BOC, 0.8f, 0.9f);
+        bool BOCtrig = EOC.process(BOC, 0.8f, 1.0f);
 
+        float timestepX = timerX.process(args.sampleTime);
+        float timestepY = timerY.process(args.sampleTime);
 
         float baseClock = inputs[CLOCK_INPUT].getVoltage(0);
         float yClock = baseClock;
-        float timeY = TimerY.process(args.sampleTime);
-        float timeX = TimerX.process(args.sampleTime);
            
         if (inYClockconnect) {
             yClock = inputs[YI_CLOCK_INPUT].getVoltage(0);
@@ -653,10 +609,8 @@ struct PoppyModule : Module
                     Xseqstep = seqsize;
                 }
                 nowX = cvValX;
-                
-                dtX = timeX;
-                TimerX.reset();               
-                speedX = 1 / (dtX);
+                dtX = timestepX;
+                timerX.reset();
             }
             if (TriggerX.isHigh()) {
                 outputs[X_TRIG_OUTPUT].setVoltage(5.0f, 0);
@@ -664,6 +618,7 @@ struct PoppyModule : Module
             else {
                 outputs[X_TRIG_OUTPUT].setVoltage(0.0f, 0);
             }
+            speedX = 1.f / dtX;
 
             bool isY = TriggerY.process(yClock, 0.8f, 1.f);
             if (isY) {
@@ -682,10 +637,8 @@ struct PoppyModule : Module
                     Yseqstep = seqsize;
                 }
                 nowY = cvValY;
-               
-                dtY = timeY;                        
-                TimerY.reset();                
-                speedY = 1 / (dtY);
+                dtY = timestepY;
+                timerY.reset();
             }
             if (TriggerY.isHigh()) {
                 outputs[Y_TRIG_OUTPUT].setVoltage(5.0f, 0);
@@ -693,6 +646,7 @@ struct PoppyModule : Module
             else {
                 outputs[Y_TRIG_OUTPUT].setVoltage(0.0f, 0);
             }
+            speedY = 1.f / dtY;
 
             bool xClose = rack::math::isNear(xCoord[abs(Xstep - 1)], xCoord[Xstep], 0.1f);
             if (xClose) {
@@ -737,11 +691,12 @@ struct PoppyModule : Module
         }
         case 2: {
             float averageform  = 0.f;
-            for (int a = seqstart; a < seqstart + seqsize; ++a) {
-                averageform += xCoord[a] + yCoord[a];
+            for (int a = seqstart; a < (seqstart + seqsize); ++a) {
+                averageform += xCoord[a % iters] + yCoord[a % iters];
             }
             averageform /= seqsize;
-         
+            deClick.process(averageform);
+            averageform = deClick.lowpass();
             float avelerp = Funct.lerp(_range, range, -2.f, 2.f, averageform);
             outputs[AUX_OUTPUT].setVoltage(avelerp, 0);
             lights[AUX_TYPE_LIGHT + 0].setBrightness(0.6);
@@ -871,8 +826,8 @@ struct FracWidget : Widget {
             int pictureColor = nvgCreateImageRGBA(args.vg, drawboxX, drawboxY, 0, pic.Kvals);
             /*filling screenbuffer with RGBA values*/
             
-                for (size_t j = 0; j < drawboxY; j += pixel) {
-                    for (size_t l = 0; l < drawboxX; l += pixel) {
+                for (int j = 0; j < drawboxY; j += pixel) {
+                    for (int l = 0; l < drawboxX; l += pixel) {
 
                         int index = j * drawboxX + l;
 
@@ -1049,28 +1004,15 @@ struct FracWidget : Widget {
         Widget::drawLayer(args, layer);
     }
 };
-/**
- * At least in VCV 1.0, every module must have a Widget, too.
- * The widget provides the user interface for a module.
- * Widgets may draw to the screen, get mouse and keyboard input, etc...
- * Widgets cannot actually process or generate audio.
- */
+
 struct PoppyWidget : ModuleWidget {
     PoppyWidget(PoppyModule* module) {
-        // The widget always retains a reference to the module.
-        // you must call this function first in your widget constructor.
+
         setModule(module);
 
-        // Typically the panel graphic is added first, then the other 
-        // UI elements are placed on TOP.
-        // In VCV the Z-order of added children is such that later
-        // children are always higher than children added earlier.
-		//setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/fractal_panel.svg")));
         setPanel(createPanel(asset::plugin(pluginInstance, "res/fractal_panel.svg"), asset::plugin(pluginInstance, "res/fractal_panel-dark.svg")));
 
-        // VCV modules usually have images of "screws" to make them
-        // look more like physical module. You may design your own screws, 
-        // or not use screws at all.
+
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
@@ -1081,9 +1023,7 @@ struct PoppyWidget : ModuleWidget {
         addChild(createLightCentered<MediumLight<RedGreenBlueLight>>(Vec(206, 243), module, PoppyModule::AUX_TYPE_LIGHT));
         addChild(createLightCentered<MediumLight<BlueLight>>(Vec(190, 331), module, PoppyModule::INVERT_LIGHT));
         addChild(createLightCentered<MediumLight<BlueLight>>(Vec(108, 331), module, PoppyModule::MIRROR_LIGHT));
-        // Now we place the widgets that represent the inputs, outputs, controls,
-        // and lights for the module. VCO2 does not have any lights, but does have
-        // the other widgets.
+
 
         addInput(createInput<PurplePort>(Vec(10, 30), module, PoppyModule::CLOCK_INPUT));
         addInput(createInput<PurplePort>(Vec(10, 65), module, PoppyModule::YI_CLOCK_INPUT));
@@ -1152,11 +1092,5 @@ struct PoppyWidget : ModuleWidget {
     
 };
 
-// This mysterious line must appear for each module. The
-// name in quotes at then end is the same string that will be in 
-// plugin.json in the entry for corresponding plugin.
 
-// This line basically tells VCV Rack:
-// I'm called "demo-vco2", my module is VCO2Module, and my Widget is VCO2Widget.
-// In effect, it implements a module factory.
 Model* modelPoppy = createModel<PoppyModule, PoppyWidget>("Poppy-fields");
