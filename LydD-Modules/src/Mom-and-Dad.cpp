@@ -7,8 +7,7 @@
  
 
 static const int maxPolyphony = 1;
-static const float PI = 3.14159265358979323846;
-static const float _2PI = 2.0 * PI;
+
 
 
 class Lines {
@@ -251,9 +250,9 @@ struct DadrasModule : Module
 
         axis = (int)params[AXIS_SWITCH_PARAM].value;
         reset = params[RESET_BUTTON_PARAM].value == 1.f || inputs[RESET_INPUT].getVoltage(0) >= 1.f;
-        float synchpress = (params[SYNCH_BUTTON_PARAM].value) + ((inputs[SYNCH_INPUT].isConnected()) ? abs(inputs[SYNCH_INPUT].getVoltage(0)) : 0);
-        //Buttons.momentButton(synchpress, &synchro, &syn);
-        synchro = params[SYNCH_BUTTON_PARAM].value == 1.f || inputs[SYNCH_INPUT].getVoltage(0) >= 1.f;
+        float synchpress = std::max((params[SYNCH_BUTTON_PARAM].value), ((inputs[SYNCH_INPUT].isConnected()) ? abs(inputs[SYNCH_INPUT].getVoltage(0)) : 0));
+        Buttons.momentButton(synchpress, &synchro, &syn);
+        //synchro = params[SYNCH_BUTTON_PARAM].value == 1.f || inputs[SYNCH_INPUT].getVoltage(0) >= 1.f;
         float A = params[A_PARAM].value;
         float B = params[B_PARAM].value;
         float G = params[G_PARAM].value;
@@ -340,12 +339,6 @@ struct DadrasModule : Module
         rack::simd::float_4 CoordprevC = CoordC;
         rack::simd::float_4 CoordprevL = CoordL + Spread;
         rack::simd::float_4 CoordprevR = CoordR - Spread;
-
-
-
-        
-        
-
 
         if (Phase[0] <= 2 * PI) {
             click1 = true;
@@ -442,16 +435,11 @@ struct DadWidget : Widget{
             int drawboxX = box.size.x;
             int drawboxY = box.size.y;
             int bound = Momeni->bounds;
-            int tailStop = 0;
-            
-
             
             if (Momeni->axis == 2) {
                 addSpin = true;
             }
-            
-            
-            
+                   
             nvgScissor(args.vg, 0, 0, drawboxX, drawboxY);
             nvgStrokeWidth(args.vg, 1.2);
             nvgStrokeColor(args.vg, nvgRGBAf(0.4, 0.4, 0.2, 0.4));
