@@ -2,8 +2,7 @@
 #include "demo-plugin.hpp"
 #include <vector>
 
-static const float PI = 3.14159265358979323846;
-static const float _2PI = 2.0 * PI;
+
 
 class Follow {
 private:
@@ -36,7 +35,7 @@ struct PathEquate {
     rack::simd::float_4 ychange(float b, rack::simd::float_4 xprev, rack::simd::float_4 yprev, float wave) {
         rack::simd::float_4 dy;
         //for (int i = 0; i < 4; ++i) {
-          dy.v = sse_mathfun_cos_ps(((2 * xprev.v * yprev.v) + b)) * -sse_mathfun_sin_ps((xprev.v * wave + PI / 2.0));
+          dy.v = sse_mathfun_cos_ps(((2 * xprev.v * yprev.v) + b)) * -sse_mathfun_sin_ps((xprev.v * wave + PI / 2.f));
         //}
         return dy;// cos(yprev + (dy - xprev / dt));
     }
@@ -63,7 +62,6 @@ struct SimoneModule : Module
         ITER2_PARAM,
         ITER3_PARAM,
         ITER4_PARAM,
-        LFO2_BUTTON_PARAM,
         RANGE_BUTTON_PARAM,
         NUM_PARAMS
     };
@@ -123,7 +121,7 @@ struct SimoneModule : Module
         configParam(ITER3_PARAM, 1.f, 5.f, 1.f, "Current3");
         configParam(ITER4_PARAM, 1.f, 5.f, 1.f, "Current4");
 
-        configParam(LFO2_BUTTON_PARAM, 0.f, 1.f, 0.f, "LFO->2");
+
         configParam(RANGE_BUTTON_PARAM, 0.f, 1.f, 0.f, "Range");
 
     }
@@ -133,6 +131,9 @@ struct SimoneModule : Module
     BaseButtons Buttons;
     PathEquate Paths;
     Follow* follow = new(Follow);
+    rack::dsp::TRCFilter<rack::simd::float_4> dcRemoveX;
+    rack::dsp::TRCFilter<rack::simd::float_4> dcRemoveY;
+
 
     int loopCounter = 0;
     bool dirty;
@@ -233,6 +234,8 @@ struct SimoneModule : Module
         isinSpeed2 = inputs[SPEED2_INPUT].isConnected();
         isinSpeed3 = inputs[SPEED3_INPUT].isConnected();
         isinSpeed4 = inputs[SPEED4_INPUT].isConnected();
+        dcRemoveX.setCutoffFreq(10.6f / args.sampleRate);
+        dcRemoveY.setCutoffFreq(10.6f / args.sampleRate);
     }
 
     void buildParams(const ProcessArgs& args) {
@@ -358,17 +361,24 @@ struct SimoneModule : Module
                 }
 
             }
+            rack::simd::float_4 Xoutend = Xouts;
+            rack::simd::float_4 Youtend = Youts;
+            if (rangetype == 2) {
+                dcRemoveX.process(Xouts);
+                dcRemoveY.process(Youts);
+                Xoutend = dcRemoveX.highpass();
+                Youtend = dcRemoveY.highpass();
 
-            
+            }
 
-            outputs[X_1_OUTPUT].setVoltage(Xouts[0] * 5.f, 0);
-            outputs[Y_1_OUTPUT].setVoltage(Youts[0] * 5.f, 0);
-            outputs[X_2_OUTPUT].setVoltage(Xouts[1] * 5.f, 0);
-            outputs[Y_2_OUTPUT].setVoltage(Youts[1] * 5.f, 0);
-            outputs[X_3_OUTPUT].setVoltage(Xouts[2] * 5.f, 0);
-            outputs[Y_3_OUTPUT].setVoltage(Youts[2] * 5.f, 0);
-            outputs[X_4_OUTPUT].setVoltage(Xouts[3] * 5.f, 0);
-            outputs[Y_4_OUTPUT].setVoltage(Youts[3] * 5.f, 0);
+            outputs[X_1_OUTPUT].setVoltage(Xoutend[0] * 5.f, 0);
+            outputs[Y_1_OUTPUT].setVoltage(Youtend[0] * 5.f, 0);
+            outputs[X_2_OUTPUT].setVoltage(Xoutend[1] * 5.f, 0);
+            outputs[Y_2_OUTPUT].setVoltage(Youtend[1] * 5.f, 0);
+            outputs[X_3_OUTPUT].setVoltage(Xoutend[2] * 5.f, 0);
+            outputs[Y_3_OUTPUT].setVoltage(Youtend[2] * 5.f, 0);
+            outputs[X_4_OUTPUT].setVoltage(Xoutend[3] * 5.f, 0);
+            outputs[Y_4_OUTPUT].setVoltage(Youtend[3] * 5.f, 0);
 
             float mixX = 0.f;
             for (int m = 0; m < 4; ++m) {
@@ -457,14 +467,12 @@ struct SimoneWidget : Widget {
             rack::simd::float_4 xds(0.f);
             rack::simd::float_4 yds(0.f);
             int maxsize = Simon->maxsize;
-
-            rack::simd::float_4  dt = Simon->DT;
             nvgBeginPath(args.vg);
             nvgFillColor(args.vg, nvgRGBAf(0.62, 0.52, 0.75, 0.12));
             nvgRect(args.vg, 0, 0, drawboxX, drawboxY);
             nvgFill(args.vg);
             nvgClosePath(args.vg);
-            Functions.incrementPhase(Simon->timePitch, 4100, &Wdt, _2PI);
+            Functions.incrementPhase(Simon->timePitch, 4410, &Wdt, _2PI);
             for (int i = 0; i < 30; i += 2) {
                 for (int j = 0; j < 30; j += 2) {
 
@@ -518,7 +526,7 @@ struct SimoneWidget : Widget {
             std::vector<rack::simd::float_4> TrailsX;
             std::vector<rack::simd::float_4> TrailsY;
             Simon->follow->PeekPoints(&TrailsX, &TrailsY);
-            for (int t = 0; t < TrailsX.size(); ++t) {
+            for (int t = 0; t < (int)TrailsX.size(); ++t) {
 
                 nvgBeginPath(args.vg);
                 nvgFillColor(args.vg, nvgRGBAf(1.0, 1.0, 0.0, 0.36));
@@ -576,12 +584,6 @@ struct SimonePanelWidget : ModuleWidget {
         addParam(createParam<RoundSmallBlackKnob>(Vec(231, 303), module, SimoneModule::ITER3_PARAM));
         addParam(createParam<RoundSmallBlackKnob>(Vec(231, 338), module, SimoneModule::ITER4_PARAM));
         
-
-        
-  
-
-
-        addParam(createParam<VCVButton>(Vec(270, 104), module, SimoneModule::LFO2_BUTTON_PARAM));
         addParam(createParam<VCVButton>(Vec(270, 75), module, SimoneModule::RANGE_BUTTON_PARAM));
 
         addInput(createInput<PurplePort>(Vec(88.5, 199), module, SimoneModule::SPEED1_INPUT));
