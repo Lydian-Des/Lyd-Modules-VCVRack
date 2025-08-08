@@ -141,6 +141,7 @@ struct TorusModule : Module
         LITTLE_WIND_INPUT,
         FM_INPUT,
         R_DIFF_INPUT,
+        DRIVE_INPUT,
         NUM_INPUTS
 	};
     enum OutputIds {
@@ -196,6 +197,7 @@ struct TorusModule : Module
     float nPhase = 0.0;
     float tWind = 1.0;
     float nWind = 2.0;
+    float drivepar = 0.0;
     float drive = 0.0;
     rack::simd::float_4 tPitches; 
     rack::simd::float_4 tPhases;
@@ -285,7 +287,7 @@ struct TorusModule : Module
             nPitches = nPitches / 1024.f;
         }
 
-
+        drivepar = params[DRIVE_PARAM].value;
         
     }
 
@@ -322,7 +324,8 @@ struct TorusModule : Module
         }
         }
 
-        drive = params[DRIVE_PARAM].value;
+        drive = (inputs[DRIVE_INPUT].isConnected()) ? inputs[DRIVE_INPUT].getVoltage(0) * (drivepar / 5.f) : drivepar;
+
 
         rack::simd::float_4 normwave = Coord / (R + r);
         normwave *= pow((drive / 6.f), 3) + 1.f;
@@ -475,25 +478,9 @@ struct TorusDrawWidget : Widget {
                 nvgStrokeColor(args.vg, nvgRGBAf(color[2] / 10.0, color[1] / 5.0, color[0] / 5.0, color[3]));
                 nvgStroke(args.vg);
             }
-
-             
-
-                
-
-                
-                
-        }
-
-            
-
-            
-            
-            
                
-
-            
-            
-        
+        }
+ 
         Widget::drawLayer(args, layer);
     }
 };
@@ -509,28 +496,29 @@ struct TorusPanelWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
 
-        addParam(createParam<RoundHugeBlackKnob>(Vec(40, 168), module, TorusModule::BIG_PITCH_PARAM));
-        addParam(createParam<RoundBlackKnob>(Vec(18, 238), module, TorusModule::LITTLE_PITCH_PARAM));
-        addParam(createParam<RoundSmallBlackKnob>(Vec(97, 230), module, TorusModule::FM_PARAM));
+        addParam(createParam<RoundHugeBlackKnob>(Vec(25, 165), module, TorusModule::BIG_PITCH_PARAM));
+        addParam(createParam<RoundBlackKnob>(Vec(20, 240), module, TorusModule::LITTLE_PITCH_PARAM));
+        addParam(createParam<RoundSmallBlackKnob>(Vec(98, 162), module, TorusModule::FM_PARAM));
         addParam(createParam<RoundSmallBlackKnob>(Vec(151, 230), module, TorusModule::BIG_WIND_PARAM));
         addParam(createParam<RoundSmallBlackKnob>(Vec(199, 238), module, TorusModule::LITTLE_WIND_PARAM));       
-        addParam(createParam<RoundSmallBlackKnob>(Vec(180, 190), module, TorusModule::R_DIFF_PARAM));
-        addParam(createParam<RoundBlackKnob>(Vec(95, 168), module, TorusModule::DRIVE_PARAM));
+        addParam(createParam<RoundSmallBlackKnob>(Vec(185, 192), module, TorusModule::R_DIFF_PARAM));
+        addParam(createParam<RoundBlackKnob>(Vec(85, 228), module, TorusModule::DRIVE_PARAM));
         
         addParam(createParam<VCVButton>(Vec(210, 134), module, TorusModule::LFO2_BUTTON_PARAM));
         addParam(createParam<VCVButton>(Vec(10, 134), module, TorusModule::LFO1_BUTTON_PARAM));
         addParam(createParam<PurpleSwitch>(Vec(10, 74), module, TorusModule::EQUATION_SWITCH_PARAM));
 
-        addInput(createInput<PurplePort>(Vec(30, 288), module, TorusModule::BIG_PITCH_INPUT));
-        addInput(createInput<PurplePort>(Vec(10, 322), module, TorusModule::LITTLE_PITCH_INPUT));
-        addInput(createInput<PurplePort>(Vec(50, 322), module, TorusModule::FM_INPUT));
-        addInput(createInput<PurplePort>(Vec(162, 322), module, TorusModule::BIG_WIND_INPUT));
-        addInput(createInput<PurplePort>(Vec(202, 322), module, TorusModule::LITTLE_WIND_INPUT));
-        addInput(createInput<PurplePort>(Vec(182, 288), module, TorusModule::R_DIFF_INPUT));
+        addInput(createInput<PurplePort>(Vec(10, 300), module, TorusModule::BIG_PITCH_INPUT));
+        addInput(createInput<PurplePort>(Vec(10, 332), module, TorusModule::LITTLE_PITCH_INPUT));
+        addInput(createInput<PurplePort>(Vec(50, 288), module, TorusModule::FM_INPUT));
+        addInput(createInput<PurplePort>(Vec(50, 322), module, TorusModule::DRIVE_INPUT));
+        addInput(createInput<PurplePort>(Vec(168, 322), module, TorusModule::BIG_WIND_INPUT));
+        addInput(createInput<PurplePort>(Vec(205, 332), module, TorusModule::LITTLE_WIND_INPUT));
+        addInput(createInput<PurplePort>(Vec(168, 288), module, TorusModule::R_DIFF_INPUT));
         
         addOutput(createOutput<PurplePort>(Vec(88, 288), module, TorusModule::X_OUTPUT));
-        addOutput(createOutput<PurplePort>(Vec(129, 288), module, TorusModule::Y_OUTPUT));
-        addOutput(createOutput<PurplePort>(Vec(108.5, 322), module, TorusModule::Z_OUTPUT));
+        addOutput(createOutput<PurplePort>(Vec(130, 288), module, TorusModule::Y_OUTPUT));
+        addOutput(createOutput<PurplePort>(Vec(108.5, 332), module, TorusModule::Z_OUTPUT));
 
         
         if (module) {
