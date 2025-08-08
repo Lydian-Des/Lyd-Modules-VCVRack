@@ -12,11 +12,11 @@ A technically infinite interactive topographical map of sequences.
  
 Outputs::
 
--X and Y CV respectively, with associated Range switch from 0 / +2, -2 / +2, and -5 / +5.
+- X and Y CV respectively, with associated Range switch from 0 / +2, -2 / +2, and -5 / +5.
 
--Trigger(gate) outputs for X and Y  taken from associated clock inputs.
+- Trigger(gate) outputs for X and Y  taken from associated clock inputs.
 
--Aux Output -- this one has 4 Modes -
+- Aux Output -- this one has 4 Modes -
  	1) Sum - Simply sums together the X and Y outputs.
  	2) Magnitude - Outputs the scalar magnitude (always Positive) of the current steps location.
  	3) Centroid - Computes the average scalar value of the entire chosen sequence.
@@ -24,56 +24,56 @@ Outputs::
   
 Inputs & Paramters::
 
--Clock - Button advances Sequence by 1.
- 	- Input Simply determines if input is over 1v, so can be driven by pretty much anything. Is Master Clock.
+- Clock - Button advances Sequence by 1.
+ 	-Input Simply determines if input is over 1v, so can be driven by pretty much anything. Is Master Clock.
   
--Yi-Clock - Normalled to Clock, but allows the breaking apart of the X and Y axes.  ('Yi' just tells you these are spooky     complex numbers).
+- Yi-Clock - Normalled to Clock, but allows the breaking apart of the X and Y axes.  ('Yi' just tells you these are spooky     complex numbers).
 
--Reset - Button sets step to the chosen start point,
- 	 - If Input goes over 1v, resets to sequence start, and holds it there until input drops below 1v.
+- Reset - Button sets step to the chosen start point,
+ 	 -If Input goes over 1v, resets to sequence start, and holds it there until input drops below 1v.
    
--Reverse - Button toggles reverse on and off ( might fix input in a similar way ).
- 	- Input Reverses sequence as long as input is over 1v.
+- Reverse - Button toggles reverse on and off ( might fix input in a similar way ).
+ 	-Input Reverses sequence as long as input is over 1v.
   
--Mutagens(Mut.) - Controls the Z variable in the fractal math, and conceptually mutates the soil to grow different and         stranger Flowers.
-  - Stacked knobs, Outer controls X(horizontal) and Inner controls Yi(vertical).
- 	- inputs accept =/-5v and are added to Knob position.
+- Mutagens(Mut.) - Controls the Z variable in the fractal math, and conceptually mutates the soil to grow different and         stranger Flowers.
+  -Stacked knobs, Outer controls X(horizontal) and Inner controls Yi(vertical).
+ 	-nputs accept =/-5v and are added to Knob position.
 
--Soil - Controls the C variable in the fractal math, and conceptually chooses which flower in the field you pluck by          location.
- 	- Knobs in same arrangement as Mutagens.
- 	- Inputs accept +/-5v and are added to knob positions.
+- Soil - Controls the C variable in the fractal math, and conceptually chooses which flower in the field you pluck by          location.
+ 	-Knobs in same arrangement as Mutagens.
+ 	-Inputs accept +/-5v and are added to knob positions.
 
--Petals - controls the exponent in the fractal math, and conceptually presents the recursive nature of the whole thing by     showing that the Field itself is a Flower.
- 	- Inputs accept +/-5v (takes the absolute value of the input) and are added to the Knob.
+- Petals - controls the exponent in the fractal math, and conceptually presents the recursive nature of the whole thing by     showing that the Field itself is a Flower.
+ 	-Inputs accept +/-5v (takes the absolute value of the input) and are added to the Knob.
 
--Start - chooses the starting point of the sequence, up to 128.
- 	- Input replaces Knob, and accepts +/-5v but simply cuts out negative voltages.
+- Start - chooses the starting point of the sequence, up to 128.
+ 	-Input replaces Knob, and accepts +/-5v but simply cuts out negative voltages.
 
--Length - chooses the length of the sequence, up to 128 (sequence wraps around to 0 at the end).
- 	- Input replaces Knob, and accepts +/-5v but simply cuts out negative voltages.
+- Length - chooses the length of the sequence, up to 128 (sequence wraps around to 0 at the end).
+ 	-Input replaces Knob, and accepts +/-5v but simply cuts out negative voltages.
 
--Smooth - slews the X and Y outputs respectively (also affects sum and magnitude in Aux). Max Slew is based on clock speed.
+- Smooth - slews the X and Y outputs respectively (also affects sum and magnitude in Aux). Max Slew is based on clock speed.
  	-Inputs replace Knobs, and accept +/-5v but simply cut out negative voltages.
 
--Move - Does what it says, but to the whole screen instead of just the point like Soil.
- 	- Stacked Knobs in the same configuration.
+- Move - Does what it says, but to the whole screen instead of just the point like Soil.
+ 	-Stacked Knobs in the same configuration.
 
--Zoom - Zooms in on the center of the screen, up to 50x.
--secret button under the Move knob - chooses visual styles, including Buddhabrot, which is a literal show of all(most of)     the sequences the exist.
+- Zoom - Zooms in on the center of the screen, up to 50x.
+- secret button under the Move knob - chooses visual styles, including Buddhabrot, which is a literal show of all(most of)     the sequences the exist.
 
--Fractal - chooses from between 6 different fractals, all variations of the Mandelbrot (one day they may all have their own     tuning attributes or something to make them more unique).
+- Fractal - chooses from between 6 different fractals, all variations of the Mandelbrot (one day they may all have their      own tuning attributes or something to make them more unique).
 
--Julia - enters Julia mode for whatever fractal has been chosen (very pretty).
+- Julia - enters Julia mode for whatever fractal has been chosen (very pretty).
 
--(up arrow close to Soil knob) - takes whatever location is chosen and copies it to the Move knob such that that point is     Centered (sets Soil knobs to 0 so sequence stays put).
+- (up arrow close to Soil knob) - takes whatever location is chosen and copies it to the Move knob such that that point is     Centered (sets Soil knobs to 0 so sequence stays put).
 
--(down arrow close to Z knob) - takes Move knob location and maps it to the Z knob (useful to find a Julia set of a           particular location easily).
+- (down arrow close to Z knob) - takes Move knob location and maps it to the Z knob (useful to find a Julia set of a           particular location easily).
 
--Aux type Button - cycles through Aux types listed above.
+- Aux type Button - cycles through Aux types listed above.
 
--Mirror Y - Flips the Y axis (difference is more pronounced in asymmetrical fractals, but needs some fixing anyway).
+- Mirror Y - Flips the Y axis (difference is more pronounced in asymmetrical fractals, but needs some fixing anyway).
 
--Invert - Flips X and Y outputs around 0 (You're playing that Bach upside Down!).
+- Invert - Flips X and Y outputs around 0 (You're playing that Bach upside Down!).
 
 ::Mom and Dad::
 
@@ -161,27 +161,26 @@ X on the left, Y on the right, Z below. A Torus is 3D after all.
 
 Inputs & Parameters::
 
-- Big Pitch - Huge Knob on the left, controls pitch of outer winding. Input top of left-hand triangle of jacks.
+- Big Pitch - controls pitch of outer winding. Input top of left-hand triangle of jacks.
 
-- Little Pitch - Medium Knob below and to the left of Big Pitch, controls pitch of inner winding. Input Bottom-left of left-hand triangle.
+- Little Pitch - controls pitch of inner winding. Input Bottom-left of left-hand triangle.
 
-- FM - Small Knob below and to the right of Big Pitch, also attenuverts input. Input Bottom-left of left-hand triangle.
+- FM -  also attenuverts input. Input Bottom-left of left-hand triangle.
 
-- Drive - Medium Knob right friggin next to Big Pitch. No input yet, coming very soon, as well as putting it somewhere else.
+- Drive - its distortion, like the drive in the Fundamentals VCF.
 
-- Radial Difference - Small Knob top of right-hand triangle of Knobs, controls difference between inner and outer radii.
+- Radial Difference - controls difference between inner and outer radii.
 
-- Input top of right-hand triangle of jacks.
+- Big Windings -weighted average of number of times around outer circle for one rotation of base sin.
 
-- Big Windings - Small Knob bottom-left of right-hand triangle, weighted average of number of times around outer circle for   one rotation of base sin. Input bottom-left of right-hand triangle.
+- Little Windings -weighted average of number of times around inner circle   for one rotation of base sin.
 
-- Little Windings - Small Knob bottom-right of right-hand triangle, weighted average of number of times around inner circle   for one rotation of base sin. Input bottom-right of right-hand triangle.
+- Equation switch - chooses equations, joyously named 'Electron', 'Folding', and 'Toroid'.
 
-- Equation switch - top left, chooses equations, joyously named 'Electron', 'Folding', and 'Toroid'.
+- LFO 1 -turns Big Pitch (outer circle) into LFO.
 
-- LFO 1 - button on left-hand side, turns Big Pitch (outer circle) into LFO.
+- LFO 2 - does the same for Little Pitch (inner circle).
 
-- LFO 2 - button on right-hand side, does the same for Little Pitch (inner circle).
 
 
 
